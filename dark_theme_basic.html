@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Humanoid Robot Control System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: -2;
+        }
+
+        .background::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            right: -20%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(120, 119, 198, 0.15) 0%, rgba(120, 119, 198, 0.08) 30%, transparent 70%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .main-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #7877c6, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        /* Main content grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Video section */
+        .video-section {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(120, 119, 198, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        #videoFeed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .qr-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(120, 119, 198, 0.8);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .qr-button:hover {
+            background: rgba(120, 119, 198, 1);
+            transform: translateY(-2px);
+        }
+
+        /* Face selection */
+        .face-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .face-button {
+            padding: 0.75rem 1.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .face-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(120, 119, 198, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .face-button.selected {
+            background: linear-gradient(135deg, rgba(120, 119, 198, 0.3), rgba(255, 119, 198, 0.3));
+            border-color: rgba(120, 119, 198, 0.8);
+            color: white;
+        }
+
+        /* Control panels */
+        .controls-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .control-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .control-label {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+        }
+
+        /* Custom toggle switch */
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            transition: 0.4s;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: rgba(255, 255, 255, 0.8);
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #7877c6, #ff77c6);
+            border-color: rgba(120, 119, 198, 0.5);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+            background: white;
+        }
+
+        /* Range slider */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .range-slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7877c6, #ff77c6);
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .slider-value {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Select dropdown */
+        .custom-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .custom-select:focus {
+            border-color: rgba(120, 119, 198, 0.5);
+        }
+
+        /* Status display */
+        .status-display {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 1rem;
+        }
+
+        /* QR Code overlay */
+        .qr-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            border-radius: 15px;
+        }
+
+        .qr-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .qr-overlay img {
+            max-width: 80%;
+            max-height: 80%;
+            border: 3px solid rgba(120, 119, 198, 0.5);
+            border-radius: 10px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-section {
+                grid-template-columns: 1fr;
+            }
+
+            .time-circle {
+                width: 250px;
+                height: 250px;
+            }
+
+            .current-time {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .time-circle {
+                width: 200px;
+                height: 200px;
+            }
+
+            .current-time {
+                font-size: 1.5rem;
+            }
+
+            .main-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .video-section,
+        .control-panel {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .control-panel:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .control-panel:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .control-panel:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="main-title">Humanoid Tracking Control System</h1>
+            <p class="subtitle">Face Presence Recognition & Tracking Platform</p>
+        </header>
+
+        <div class="main-grid">
+            <div class="video-section">
+                <h2 class="section-title">Primary Visual Feed</h2>
+                <div class="video-container">
+                    <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Live Camera Feed">
+                    <button class="qr-button" id="qrCodeButton">Website QR Code</button>
+                    <div class="qr-overlay" id="qrCodeDisplay">
+                        <img id="qrCodeImage" src="" alt="QR Code">
+                    </div>
+                </div>
+
+                <div class="face-selection" id="faceSelectionButtons">
+                    <button class="face-button selected" id="viewAllFacesBtn" data-face-id="-1">
+                        All Faces
+                    </button>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="control-panel">
+                    <h3 class="section-title">Visual Recognition Module</h3>
+
+                    <div class="control-group">
+                        <div class="control-item">
+                            <span class="control-label">Face Tracking</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="visionToggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="control-item">
+                            <span class="control-label">Response Time</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" class="range-slider" id="smoothingSlider" min="0" max="1" step="0.01" value="0.2">
+                            <span class="slider-value" id="smoothingValue">0.20</span>
+                        </div>
+
+                        <div class="control-item">
+                            <span class="control-label">Face Tracking Algorithm</span>
+                            <select class="custom-select" id="autoModeSelect">
+                                <option value="manual">Manual Override</option>
+                                <option value="largest">Maximum Signature</option>
+                                <option value="closest">Central Priority</option>
+                                <option value="center">Weighted Analysis</option>
+                                <option value="speaking">Voice Detection</option>
+                                <option value="priority">Adaptive Algorithm</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-panel">
+                    <h3 class="section-title">Audio Analysis Module</h3>
+
+                    <div class="control-group">
+                        <div class="control-item">
+                            <span class="control-label">Audio Mapping</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="audioToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="status-display" id="audioStatus">
+                            Audio Volume: 0.0 | Mouth Angle: 70°
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Robot control functionality (adapted from original code)
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoFeed = document.getElementById('videoFeed');
+            const faceSelectionButtonsDiv = document.getElementById('faceSelectionButtons');
+            const viewAllFacesBtn = document.getElementById('viewAllFacesBtn');
+            const qrCodeButton = document.getElementById('qrCodeButton');
+            const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+            const qrCodeImage = document.getElementById('qrCodeImage');
+            const visionToggle = document.getElementById('visionToggle');
+            const audioToggle = document.getElementById('audioToggle');
+            const smoothingSlider = document.getElementById('smoothingSlider');
+            const smoothingValue = document.getElementById('smoothingValue');
+            const audioStatus = document.getElementById('audioStatus');
+            const autoModeSelect = document.getElementById('autoModeSelect');
+
+            let currentSelectedFaceId = -1;
+
+            // QR Code functionality
+            qrCodeButton.addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/generate_qr_code');
+                    const data = await response.json();
+                    if (data.qr_image) {
+                        qrCodeImage.src = data.qr_image;
+                        qrCodeDisplay.classList.add('active');
+                    }
+                } catch (error) {
+                    console.error("Error generating QR code:", error);
+                }
+            });
+
+            qrCodeDisplay.addEventListener('click', () => {
+                qrCodeDisplay.classList.remove('active');
+                qrCodeImage.src = "";
+            });
+
+            // Smoothing slider
+            smoothingSlider.addEventListener('input', () => {
+                const alpha = parseFloat(smoothingSlider.value);
+                smoothingValue.textContent = alpha.toFixed(2);
+                sendSmoothingValue(alpha);
+            });
+
+            async function sendSmoothingValue(alpha) {
+                try {
+                    const response = await fetch('/set_smoothing', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ alpha: alpha })
+                    });
+                    const result = await response.json();
+                    if (result.status !== 'success') throw new Error(result.message);
+                } catch (error) {
+                    console.error("Error updating smoothing:", error);
+                }
+            }
+
+            // Vision toggle
+            visionToggle.addEventListener('change', async () => {
+                const newState = visionToggle.checked;
+                try {
+                    const response = await fetch('/toggle_vision_eyes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ active: newState })
+                    });
+                    const result = await response.json();
+                    if (result.status !== 'success') throw new Error(result.message);
+                } catch (error) {
+                    console.error('Error toggling vision/eyes:', error);
+                    visionToggle.checked = !newState;
+                }
+            });
+
+            // Audio toggle
+            audioToggle.addEventListener('change', async () => {
+                const newState = audioToggle.checked;
+                try {
+                    const response = await fetch('/toggle_audio_tracking', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ active: newState })
+                    });
+                    const result = await response.json();
+                    if (result.status !== 'success') {
+                        throw new Error(result.message || 'Failed to toggle audio');
+                    }
+                } catch (error) {
+                    console.error('Error toggling audio tracking:', error);
+                    audioToggle.checked = !newState;
+                }
+            });
+
+            // Auto mode selection
+            autoModeSelect.addEventListener('change', async () => {
+                const mode = autoModeSelect.value;
+                try {
+                    const response = await fetch('/set_auto_mode', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ mode: mode })
+                    });
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        const faceButtons = document.querySelectorAll('.face-button');
+                        faceButtons.forEach(button => {
+                            button.disabled = (mode !== 'manual');
+                            button.style.opacity = (mode !== 'manual') ? '0.5' : '1';
+                        });
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    console.error('Error setting auto mode:', error);
+                    autoModeSelect.value = 'manual';
+                }
+            });
+
+            // Face selection
+            async function selectFaceForArduino(faceId) {
+                try {
+                    const response = await fetch('/set_selected_face', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ face_id: faceId }),
+                    });
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        currentSelectedFaceId = result.selected_id;
+                        updateFaceSelectionUI();
+                    }
+                } catch (error) {
+                    console.error("Error sending face selection:", error);
+                }
+            }
+
+            async function updateFaceSelectionUI() {
+                try {
+                    const response = await fetch('/get_face_data');
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    const detectedFaces = data.faces;
+                    currentSelectedFaceId = data.selected_face_id;
+                    visionToggle.checked = data.vision_active;
+                    audioToggle.checked = data.audio_active;
+
+                    if (data.audio_active) {
+                        audioStatus.textContent = `Signal Strength: ${data.current_rms.toFixed(1)} | Articulation Angle: ${data.mouth_angle}°`;
+                    } else {
+                        audioStatus.textContent = 'Audio analysis disabled';
+                    }
+
+                    faceSelectionButtonsDiv.innerHTML = '';
+                    faceSelectionButtonsDiv.appendChild(viewAllFacesBtn);
+
+                    viewAllFacesBtn.classList.toggle('selected', currentSelectedFaceId === -1);
+
+                    detectedFaces.forEach((face, idx) => {
+                        const button = document.createElement('button');
+                        button.classList.add('face-button');
+                        button.textContent = `Target ${idx + 1}`;
+                        button.dataset.faceId = face.id;
+                        if (face.id === currentSelectedFaceId) button.classList.add('selected');
+                        button.onclick = () => selectFaceForArduino(face.id);
+                        faceSelectionButtonsDiv.appendChild(button);
+                    });
+                } catch (error) {
+                    console.error("Error fetching face data:", error);
+                }
+            }
+
+            viewAllFacesBtn.onclick = () => selectFaceForArduino(-1);
+
+            // Update face selection UI every 500ms
+            setInterval(updateFaceSelectionUI, 500);
+            updateFaceSelectionUI();
+        });
+    </script>
+</body>
+</html>
